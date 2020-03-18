@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name                115Rename
 // @namespace           http://tampermonkey.net/
-// @version             0.6
-// @description         115改名称(根据现有的文件名<番号>查询并修改文件名)
-// @author              db117
+// @version             0.7
+// @description         115改名称(根据现有的文件名<番号>查询并修改文件名) 增加支持FC2
+// @author              pinef
 // @include             https://115.com/*
 // @domain              javbus.com
 // @domain              avmask.com
 // @domain              avsox.host
+// @domain              adult.contents.fc2.com
 // @grant               GM_notification
 // @grant               GM_xmlhttpRequest
 // ==/UserScript==
@@ -18,12 +19,16 @@
             <li id="rename_list">
                 <a id="rename_all_javbus" class="mark" href="javascript:;">改名javbus</a>
                 <a id="rename_all_avmoo" class="mark" href="javascript:;">改名avmoo</a>
+				<a id="rename_all_Fc2" class="mark" href="javascript:;">改名FC2</a>
             </li>
         `;
     /**
      * 添加按钮的定时任务
      */
     let interval = setInterval(buttonInterval, 1000);
+
+	//FC2
+	let Fc2Search = "https://adult.contents.fc2.com/article/";
 
     // javbus
     let javbusBase = "https://www.javbus.com/";
@@ -39,6 +44,7 @@
     let avmooUncensoredSearch = "https://avsox.host/cn/search/";
     'use strict';
 
+
     /**
      * 添加按钮定时任务(检测到可以添加时添加按钮)
      */
@@ -53,6 +59,10 @@
             $("a#rename_all_avmoo").click(
                 function () {
                     rename(rename_avmoo);
+                });
+			$("a#rename_all_Fc2").click(
+                function () {
+                    rename(rename_Fc2);
                 });
             console.log("添加按钮");
             // 结束定时任务
@@ -104,6 +114,47 @@
                 }
             });
 
+    }
+
+	/**
+     * 通过FC2进行查询
+     */
+    function rename_Fc2(fid, fh, suffix, chineseCaptions) {
+        requestFC2(fid, fh, suffix, chineseCaptions, Fc2Search);
+    }
+
+    /**
+     * 请求FC2,并请求115进行改名
+     * @param fid               文件id
+     * @param fh                番号
+     * @param suffix            后缀
+     * @param chineseCaptions   是否有中文字幕
+     * @param url               请求地址
+     */
+    function requestFC2(fid, fh, suffix, chineseCaptions, url) {
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: url + fh +"/",
+            onload: xhr => {
+                // 匹配标题
+                let response = $(xhr.responseText);
+                let title = response
+                    .find("div.items_article_MainitemThumb img")
+                    .attr("title");
+                if (title) {
+                    // 构建新名称
+					fh = "FC2-PPV-" + fh
+                    let newName = buildNewName(fh, suffix, chineseCaptions, title);
+                    if (newName) {
+                        // 修改名称
+                        send_115(fid, newName, fh);
+                    }
+                } else if (url !== javbusUncensoredSearch) {
+                    // 进行无码重查询
+                    requestJavbus(fid, fh, suffix, chineseCaptions, javbusUncensoredSearch);
+                }
+            }
+        })
     }
 
     /**
@@ -199,13 +250,14 @@
      */
     function buildNewName(fh, suffix, chineseCaptions, title) {
         if (title) {
-            let newName = String(fh);
+			var newName = ""
+            //let newName = String(fh);
             // 有中文字幕
             if (chineseCaptions) {
-                newName = newName + "【中文字幕】";
+                newName = "【中文字幕】";
             }
             // 拼接标题
-            newName = newName + " " + title;
+            newName = newName + " " + title + " " + String(fh);
             if (suffix) {
                 // 文件保存后缀名
                 newName = newName + suffix;
@@ -295,7 +347,12 @@
     function getVideoCode(title) {
         title = title.toUpperCase().replace("SIS001", "")
             .replace("1080P", "")
-            .replace("720P", "");
+            .replace("720P", "")
+			.replace("[JAV] [UNCENSORED]","")
+			.replace("[THZU.CC]","")
+			.replace("[22SHT.ME]","")
+			.replace("[7SHT.ME]","")
+			.replace("-HD","");
 
         let t = title.match(/T28[\-_]\d{3,4}/);
         // 一本道
@@ -324,6 +381,15 @@
         if (!t) {
             // Jukujo-Club | 熟女俱乐部
             t = title.match(/JUKUJO[-_]\d{4}/);
+        }
+		if (!t) {
+            // FC2 PPV
+            t = title.match(/FC2[-_ ]PPV[-_ ](\d{7})/);
+			if(t){
+				console.log("找到番号:" + t[0]);
+				console.log("返回番号:" + t[1]);
+				return t[1];
+			}
         }
         // 通用
         if (!t) {
