@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         115lixian+chaxun
 // @namespace    pinef.115lixian
-// @version      0.1
-// @description  alt单击 添加115离线任务 F9单击查询115里是否存在
+// @version      0.2
+// @description  alt单击 添加115离线任务 单击查询115里是否存在 不存在跳转btclub查询
 // @author       pinef
 // @match        http://*/*
 // @match        https://*/*
@@ -164,6 +164,8 @@
 			}
 			else{
 				toastr.error(`网盘中不存在该片:${javId}`);
+				var btclub_url = "https://btsow.fun/search/" + javId2 ;
+				window.open(btclub_url,"_blank");
 			}
 			//callback(false,null);
 		});

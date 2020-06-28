@@ -1,9 +1,23 @@
+ 
+Greasy Fork
+登录 脚本列表 论坛 站点帮助 更多
+信息
+代码
+历史版本
+反馈 (3)
+统计数据
+115lixian
+alt单击 添加115离线任务
+
+重新安装 0.3 版本?
+询问，评论，或者举报这个脚本.
+ Sustain Podcast #27 🎧 Creating Dracula PRO, clipboard.js, and more! Listen now!ethical ad by CodeFund 
 // ==UserScript==
-// @name         115lixian+chaxun
-// @namespace    pinef.115lixian
-// @version      0.1
-// @description  alt单击 添加115离线任务 F9单击查询115里是否存在
-// @author       pinef
+// @name         115lixian
+// @namespace    whbb.115lixian
+// @version      0.3
+// @description  alt单击 添加115离线任务
+// @author       whbb
 // @match        http://*/*
 // @match        https://*/*
 // @require      https://cdn.bootcss.com/jquery/2.2.1/jquery.min.js
@@ -110,126 +124,22 @@
         }
     }
 
-    function request(url) {  //++
-        return new Promise(resolve => {
-            //let time1 = new Date();
-            GM_xmlhttpRequest({
-                url,
-                method: 'GET',
-                headers:  {
-                    "Cache-Control": "no-cache"
-                },
-                timeout: 30000,
-                onload: response => { //console.log(url + " reqTime:" + (new Date() - time1));
-                    resolve(response);
-                },
-                onabort: (e) =>{
-                    console.log(url + " abort");
-                    resolve("wrong");
-                },
-                onerror: (e) =>{
-                    console.log(url + " error");
-                    console.log(e);
-                    resolve("wrong");
-                },
-                ontimeout: (e) =>{
-                    console.log(url + " timeout");
-                    resolve("wrong");
-                },
-            });
-        });
-    }
-	/**
-	 * 查询115网盘是否拥有番号
-	 * @param javId 番号
-	 * @param callback 回调函数
-	 */
-	//function search115Data(javId, callback) {  //++
-	function search115Data(javId) {  //++
-		//请求搜索115番号 //115查询
-		let javId2 = javId.replace(/(-)./g, "");
-		let promise1 = request(`https://webapi.115.com/files/search?search_value=${javId}%20${javId2}&format=json`);
-		promise1.then((result) => {
-			let resultJson = JSON.parse(result.responseText);
-			if(resultJson.count > 0) {
-				let pickcode = '';
-				for (let i = 0; i < resultJson.data.length; i++) {
-					let row = resultJson.data[i];
-					if(row.vdi){//iv vdi ico
-						pickcode = row.pc;
-						toastr.warning(`${resultJson.data[0].n.replace(/\\/g, "%")}存在,路径${resultJson.data[0].dp.replace(/\\/g, "%")}`,`http://120.78.32.31/play.html?pickcode=${pickcode}`);
-						break;
-					}
-				}
-			}
-			else{
-				toastr.error(`网盘中不存在该片:${javId}`);
-			}
-			//callback(false,null);
-		});
-	}
-
     document.body.addEventListener('click', function(e){
-        if(e.altKey) {
-			e.preventDefault();
-			var url = getValidUrl(e);
-			console.log(url);
-			if (url){
-				console.log("进入url");
-				if(/magnet/i.test(url)) {
-					console.log("进入magenet");
-					e.preventDefault();
-					addUrlTask(url).then(function(json){
-						if(json.state) {
-							toastr.success(url, "任务添加成功");
-						} else {
-							toastr.warning(url, json.error_msg || "任务添加出错");
-						}
-					}, function(err) {
-						toastr.error(url, "网络出错");
-					});
-				}else if(/id=(\d+)/i.exec(url)) {     //针对FC2中的查询
-					console.log("进入FC2查询");
-					if(!css_ok) {
-						GM_addStyle(toastr_css);
-						css_ok = true;
-					}
-					e.preventDefault();
-					search115Data(/id=(\d+)/i.exec(url)[1]);
-				}else if(/fc2-ppv-(\d+)/i.exec(url)) {     //针对FC2中的查询
-					console.log("进入FC2fan查询");
-					if(!css_ok) {
-						GM_addStyle(toastr_css);
-						css_ok = true;
-					}
-					e.preventDefault();
-					search115Data(/fc2-ppv-(\d+)/i.exec(url)[1]);
-				}else if(window.getSelection?window.getSelection():document.selection.createRange().text.toString() !== undefined){
-					e.preventDefault();
-					console.log("进入url选取查询");
-					if(!css_ok) {
-						GM_addStyle(toastr_css);
-						css_ok = true;
-					}
-					var txt = window.getSelection?window.getSelection():document.selection.createRange().text;
-					console.log("查询关键字为："+txt.toString().length.typeof+"xx");
-					search115Data(txt.toString());
-
-					}
-				else{toastr.error("链接有误",url);}
-			}
-
-			else if(window.getSelection?window.getSelection():document.selection.createRange().text != null){
-				e.preventDefault();
-				console.log("进入选取查询");
-				if(!css_ok) {
-					GM_addStyle(toastr_css);
-					css_ok = true;
-				}
-				var txt2 = window.getSelection?window.getSelection():document.selection.createRange().text;
-				search115Data(txt2.toString());
-
-			}
+        if(e.shiftKey) {
+            var url = getValidUrl(e);
+            console.log(url);
+            if(url) {
+                e.preventDefault();
+                addUrlTask(url).then(function(json){
+                    if(json.state) {
+                        toastr.success(url, "任务添加成功");
+                    } else {
+                        toastr.warning(url, json.error_msg || "任务添加出错");
+                    }
+                }, function(err) {
+                    toastr.error(url, "网络出错");
+                });
+            }
         }
     }, true);
 
