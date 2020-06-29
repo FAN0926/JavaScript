@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         115lixian+chaxun
 // @namespace    pinef.115lixian
-// @version      0.3
-// @description  alt单击 添加115离线任务 单击查询115里是否存在 不存在跳转btsow查询
+// @version      0.4
+// @description  alt单击 添加115离线任务 单击查询115里是否存在 不存在跳转btclub查询
 // @author       pinef
 // @match        http://*/*
 // @match        https://*/*
@@ -15,6 +15,7 @@
 // @grant        unsafeWindow
 // @connect      115.com
 
+// v0.4 访问次数过多被403了，增加一个flag BtSearch判断是否开启btsow查询
 // v0.3 增加了打开FC2网页后，会在title后自动显示id号，同时查询115中是否含有该番号的内容，若没有则继续查询btsow中是否有相关资源，若有则标记为金黄色
 // V0.2 增加了查询115内不存在后跳转btsow
 // v0.1 实现了按住alt键，点击磁力链接能自动115离线，点击选中的文本内容自动查询115内是否存在相关内容
@@ -296,6 +297,7 @@
                 para.appendChild(node);
                 elements[i].appendChild(para);
                 let avid = result[1];
+                let BtSearch = false;
 
                 search115DataForFC2(avid, function (BOOLEAN_TYPE, playUrl) {
                     console.log("进入BOOLEAN_TYPE判断"+BOOLEAN_TYPE);
@@ -307,29 +309,29 @@
                     }else{
                         document.getElementById(avid).innerHTML =avid+" 网盘没有";
                         fontColor.value="color:red";
-                        searchBtForFC2(avid, function (BOOLEAN_TYPE) {
-                            console.log("进入searchBtForFC2判断"+BOOLEAN_TYPE);
-                            var fontColor=document.createAttribute("style");
-                            if (BOOLEAN_TYPE) {
-                                document.getElementById(avid).innerHTML =document.getElementById(avid).innerHTML + " BT有";
-                                if(document.getElementById(avid).style.color == "red"){
-                                    fontColor.value="color:Gold";
-                                    document.getElementById(avid).setAttributeNode(fontColor);
+                        if(BtSearch){
+                            searchBtForFC2(avid, function (BOOLEAN_TYPE) {
+                                console.log("进入searchBtForFC2判断"+BOOLEAN_TYPE);
+                                var fontColor=document.createAttribute("style");
+                                if (BOOLEAN_TYPE) {
+                                    document.getElementById(avid).innerHTML =document.getElementById(avid).innerHTML + " BT有";
+                                    if(document.getElementById(avid).style.color == "red"){
+                                        fontColor.value="color:Gold";
+                                        document.getElementById(avid).setAttributeNode(fontColor);
+                                    }
+                                }else{
+                                    document.getElementById(avid).innerHTML =document.getElementById(avid).innerHTML + " BT没有";
                                 }
-                            }else{
-                                document.getElementById(avid).innerHTML =document.getElementById(avid).innerHTML + " BT没有";
-                            }
-                        });
+                            });
+                        }
                     }
                     document.getElementById(avid).setAttributeNode(fontColor);
                 });
                 console.log(document.getElementById(avid).innerHTML);
-
-
-                
             }
         }
     }
+
     if(/fc2/i.test(location.href)) {
         Run();
     }
