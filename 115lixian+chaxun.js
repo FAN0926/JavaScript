@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         115lixian+chaxun
 // @namespace    pinef.115lixian
-// @version      0.4
+// @version      0.5
 // @description  alt单击 添加115离线任务 单击查询115里是否存在 不存在跳转btclub查询
 // @author       pinef
 // @match        http://*/*
@@ -15,6 +15,7 @@
 // @grant        unsafeWindow
 // @connect      115.com
 
+// v0.5 修改btsow.fun为btsow.space
 // v0.4 访问次数过多被403了，增加一个flag BtSearch判断是否开启btsow查询
 // v0.3 增加了打开FC2网页后，会在title后自动显示id号，同时查询115中是否含有该番号的内容，若没有则继续查询btsow中是否有相关资源，若有则标记为金黄色
 // V0.2 增加了查询115内不存在后跳转btsow
@@ -169,7 +170,7 @@
 			}
 			else{
 				toastr.error(`网盘中不存在该片:${javId}`);
-				var btclub_url = "https://btsow.fun/search/" + javId2 ;
+				var btclub_url = "https://btsow.space/search/" + javId2 ;
 				window.open(btclub_url,"_blank");
 			}
 			//callback(false,null);
@@ -202,7 +203,7 @@
             //异步请求搜索BT番号 //115查询
             console.log("进入异步请求搜索115番号");
             let javId2 = javId.replace(/(-)/g, "");
-            let promise1 = request(`https://btsow.fun/search/${javId2}`);
+            let promise1 = request(`https://btsow.space/search/${javId2}`);
             promise1.then((result) => {
                 //let resultJson = JSON.parse(result.responseText);
                 let resultTag = /Torrent Description/.test(result.responseText);
@@ -298,6 +299,8 @@
                 elements[i].appendChild(para);
                 let avid = result[1];
                 let BtSearch = false;
+                //let BtSearch = true;
+
 
                 search115DataForFC2(avid, function (BOOLEAN_TYPE, playUrl) {
                     console.log("进入BOOLEAN_TYPE判断"+BOOLEAN_TYPE);
