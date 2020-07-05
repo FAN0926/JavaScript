@@ -15,7 +15,7 @@
 // @grant        unsafeWindow
 // @connect      115.com
 
-// v0.5 修改btsow.fun为btsow.space
+// v0.5 修改btsow.fun为btsow.space，增加了延时函数，每隔5s访问一次btsow，减少被墙概率
 // v0.4 访问次数过多被403了，增加一个flag BtSearch判断是否开启btsow查询
 // v0.3 增加了打开FC2网页后，会在title后自动显示id号，同时查询115中是否含有该番号的内容，若没有则继续查询btsow中是否有相关资源，若有则标记为金黄色
 // V0.2 增加了查询115内不存在后跳转btsow
@@ -179,7 +179,7 @@
 
     function search115DataForFC2(javId, callback) {
             //异步请求搜索115番号 //115查询
-            console.log("进入异步请求搜索115番号");
+            //console.log("进入异步请求搜索115番号");
             let javId2 = javId.replace(/(-)/g, "");
             let promise1 = request(`https://webapi.115.com/files/search?search_value=${javId}%20${javId2}&format=json`);
             promise1.then((result) => {
@@ -201,7 +201,9 @@
 
         function searchBtForFC2(javId, callback) {
             //异步请求搜索BT番号 //115查询
-            console.log("进入异步请求搜索115番号");
+            //增加睡眠时间,单位ms
+            sleep(5000);
+            console.log("进入异步请求搜索btsow"+ Date.now());
             let javId2 = javId.replace(/(-)/g, "");
             let promise1 = request(`https://btsow.space/search/${javId2}`);
             promise1.then((result) => {
@@ -281,6 +283,11 @@
         }
     }, true);
 
+    //粗暴的睡眠函数，减少请求btsow频率
+    function sleep(d){
+        for(var t = Date.now();Date.now() - t <= d;);
+    }
+
     //增加了打开FC2网页后，会在title后自动显示id号
     function Run(){
         console.log("进入run");
@@ -298,8 +305,8 @@
                 para.appendChild(node);
                 elements[i].appendChild(para);
                 let avid = result[1];
-                let BtSearch = false;
-                //let BtSearch = true;
+                //let BtSearch = false;
+                let BtSearch = true;
 
 
                 search115DataForFC2(avid, function (BOOLEAN_TYPE, playUrl) {
@@ -330,6 +337,7 @@
                     }
                     document.getElementById(avid).setAttributeNode(fontColor);
                 });
+                //setTimeout(function(){ console.log(document.getElementById(avid).innerHTML); }, 3000);
                 console.log(document.getElementById(avid).innerHTML);
             }
         }
